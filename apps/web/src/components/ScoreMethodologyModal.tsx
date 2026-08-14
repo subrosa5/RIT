@@ -1,4 +1,9 @@
-import { Modal } from "@/components/ui/Modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const heuristicFactors = [
   {
@@ -27,52 +32,65 @@ const heuristicFactors = [
 /** Explains what actually drives the score — reused from the dashboard stat
  * tile and the KPI column header, so "как ИИ оценивает" has one honest
  * answer in one place instead of being implied by a number. */
-export function ScoreMethodologyModal({ onClose }: { onClose: () => void }) {
+export function ScoreMethodologyModal({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   return (
-    <Modal title="Как считается AI-балл" onClose={onClose}>
-      <div className="flex flex-col gap-4">
-        <p>
-          Без ключа <code className="rounded bg-[var(--color-muted)] px-1 py-0.5">ANTHROPIC_API_KEY</code>{" "}
-          балл считает детерминированная эвристика — четыре слагаемых, без скрытой логики:
-        </p>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Как считается AI-балл</DialogTitle>
+        </DialogHeader>
 
-        <div className="flex flex-col gap-2 rounded-md border border-[var(--color-border)] p-3">
-          {heuristicFactors.map((f) => (
-            <div key={f.label} className="flex items-start gap-3">
-              <span className="font-mono-data w-16 shrink-0 text-right text-[var(--color-primary)]">
-                {f.points}
-              </span>
-              <div>
-                <p className="font-medium text-slate-800">{f.label}</p>
-                <p className="text-xs text-slate-500">{f.detail}</p>
+        <div className="flex flex-col gap-4 text-sm text-foreground">
+          <p>
+            Без ключа{" "}
+            <code className="rounded bg-muted px-1 py-0.5">ANTHROPIC_API_KEY</code> балл
+            считает детерминированная эвристика — четыре слагаемых, без скрытой логики:
+          </p>
+
+          <div className="flex flex-col gap-2 rounded-md border border-border p-3">
+            {heuristicFactors.map((f) => (
+              <div key={f.label} className="flex items-start gap-3">
+                <span className="font-mono-data w-16 shrink-0 text-right text-primary">
+                  {f.points}
+                </span>
+                <div>
+                  <p className="font-medium text-foreground">{f.label}</p>
+                  <p className="text-xs text-muted-foreground">{f.detail}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <p>
-          Разбивку по каждой конкретной инициативе — с точными очками — можно посмотреть, раскрыв
-          её в списке «Инициативы» (клик по названию).
-        </p>
-
-        <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-muted)] p-3">
-          <p className="font-medium text-slate-800">Если задан ANTHROPIC_API_KEY</p>
-          <p className="mt-1 text-xs text-slate-600">
-            Баллы и факторы формирует модель — она сама решает, на что опереться (новизна,
-            реализуемость, влияние), и присылает свою разбивку в том же формате. Формула выше в
-            этом случае не используется.
+          <p>
+            Разбивку по каждой конкретной инициативе — с точными очками — можно посмотреть,
+            раскрыв её в списке «Инициативы» (клик по названию).
           </p>
-        </div>
 
-        <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-accent)]/10 p-3">
-          <p className="font-medium text-slate-800">Важно: балл ≠ статус</p>
-          <p className="mt-1 text-xs text-slate-600">
-            AI-балл — это рекомендация эксперту, а не решение. Статус «Рекомендована» или
-            «Отклонена» всегда выставляет куратор вручную — ИИ не может отклонить инициативу
-            самостоятельно.
-          </p>
+          <div className="rounded-md border border-border bg-muted p-3">
+            <p className="font-medium text-foreground">Если задан ANTHROPIC_API_KEY</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Баллы и факторы формирует модель — она сама решает, на что опереться (новизна,
+              реализуемость, влияние), и присылает свою разбивку в том же формате. Формула выше
+              в этом случае не используется.
+            </p>
+          </div>
+
+          <div className="rounded-md border border-accent bg-accent/40 p-3">
+            <p className="font-medium text-foreground">Важно: балл ≠ статус</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              AI-балл — это рекомендация эксперту, а не решение. Статус «Рекомендована» или
+              «Отклонена» всегда выставляет куратор вручную — ИИ не может отклонить инициативу
+              самостоятельно.
+            </p>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </DialogContent>
+    </Dialog>
   );
 }

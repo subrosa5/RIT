@@ -17,7 +17,7 @@ const InitiativesPage = lazy(() =>
 );
 
 function RouteFallback() {
-  return <p className="p-8 text-sm text-slate-500">Загрузка…</p>;
+  return <p className="p-8 text-sm text-white/70">Загрузка…</p>;
 }
 
 export function App() {

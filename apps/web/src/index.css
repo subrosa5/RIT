@@ -1,34 +1,189 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource/fira-sans/400.css";
+@import "@fontsource/fira-sans/500.css";
+@import "@fontsource/fira-sans/600.css";
+@import "@fontsource/fira-sans/700.css";
+@import "@fontsource/fira-code/500.css";
 
-/* Design tokens from the UI/UX Pro Max "Data-Dense Dashboard" recommendation
-   for this product (see docs/design-system.md) — CSS variables, not raw hex
-   scattered through components. */
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Design language: glass panels over a Moscow-City-at-dusk skyline —
+  deep blue/indigo/teal gradient behind, frosted translucent surfaces in
+  front. One committed visual world, not a light/dark toggle — see
+  GlassBackdrop for the decorative layer.
+*/
 :root {
-  --color-primary: #1e40af;
+  --color-primary: #2f5fd6;
   --color-on-primary: #ffffff;
-  --color-secondary: #3b82f6;
-  --color-accent: #d97706;
-  --color-background: #f8fafc;
-  --color-foreground: #1e3a8a;
-  --color-muted: #e9eef6;
-  --color-border: #dbeafe;
-  --color-destructive: #dc2626;
-  --color-ring: #1e40af;
+  --color-secondary: #38bdf8;
+  --color-accent: #f0b429;
+  --color-background: #0b1530;
+  --color-foreground: #0f1c3f;
+  --color-muted: #e7ecf8;
+  --color-border: #d7e0f5;
+  --color-destructive: #e5484d;
+  --color-ring: #2f5fd6;
+
+  --background: #0b1530;
+  --foreground: #0f1c3f;
+  --card: color-mix(in oklab, white 82%, transparent);
+  --card-foreground: #0f1c3f;
+  --popover: color-mix(in oklab, white 96%, transparent);
+  --popover-foreground: #0f1c3f;
+  --primary: #2f5fd6;
+  --primary-foreground: #ffffff;
+  --secondary: #e4ecfd;
+  --secondary-foreground: #0f1c3f;
+  --muted: #e7ecf8;
+  --muted-foreground: #5b6b8c;
+  --accent: #eaf1ff;
+  --accent-foreground: #0f1c3f;
+  --destructive: #e5484d;
+  --border: color-mix(in oklab, white 55%, #9db3e0 45%);
+  --input: color-mix(in oklab, white 75%, #9db3e0 25%);
+  --ring: #2f5fd6;
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --font-sans: "Fira Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+html,
+body,
+#root {
+  height: 100%;
 }
 
 body {
-  background: var(--color-background);
-  color: #0f172a;
-  font-family:
-    "Fira Sans",
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    sans-serif;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .font-mono-data {
   font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
   font-variant-numeric: tabular-nums;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* ---------- Glass surfaces ---------- */
+
+.glass-panel {
+  background: var(--card);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.5) inset,
+    0 20px 40px -20px rgba(11, 21, 48, 0.35);
+}
+
+.glass-panel-strong {
+  background: color-mix(in oklab, white 92%, transparent);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.6) inset,
+    0 24px 48px -24px rgba(11, 21, 48, 0.4);
+}
+
+.glass-nav {
+  background: color-mix(in oklab, #0b1530 55%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ---------- Ambient skyline backdrop ---------- */
+
+@keyframes drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(1.5%, -2%, 0) rotate(0.6deg);
+  }
+}
+
+@keyframes drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(-2%, 1.5%, 0) rotate(-0.5deg);
+  }
+}
+
+@keyframes glint {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-drift-a {
+  animation: drift-a 26s ease-in-out infinite;
+}
+
+.animate-drift-b {
+  animation: drift-b 32s ease-in-out infinite;
+}
+
+.animate-glint {
+  animation: glint 7s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

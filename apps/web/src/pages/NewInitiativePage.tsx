@@ -1,13 +1,21 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { Button } from "@/components/ui/Button";
+import { motion } from "motion/react";
+import { Button } from "@/components/ui/button";
 import { TextField, TextAreaField } from "@/components/ui/Field";
-import { SelectField } from "@/components/ui/Select";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApiError, apiFetch } from "@/lib/api";
 import type { Initiative, Region } from "@/types/api";
 
@@ -33,8 +41,9 @@ export function NewInitiativePage() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { region_id: "" } });
 
   const onSubmit = async (data: FormValues) => {
     setServerError(null);
@@ -47,56 +56,82 @@ export function NewInitiativePage() {
   };
 
   return (
-    <Card className="mx-auto max-w-2xl">
-      <CardHeader>
-        <h1 className="text-lg font-semibold text-[var(--color-foreground)]">
-          Новая инициатива
-        </h1>
-      </CardHeader>
-      <CardBody>
-        <form className="flex flex-col gap-4" onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
-          <TextField
-            label="Название"
-            required
-            error={errors.title?.message}
-            {...register("title")}
-          />
-          <TextAreaField
-            label="Описание"
-            required
-            error={errors.description?.message}
-            {...register("description")}
-          />
-          <TextField
-            label="Сфера"
-            placeholder="Например: Здравоохранение"
-            required
-            error={errors.sphere?.message}
-            {...register("sphere")}
-          />
-          <SelectField label="Регион" required error={errors.region_id?.message} {...register("region_id")}>
-            <option value="">Выберите регион</option>
-            {(regions ?? []).map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </SelectField>
-          {serverError && (
-            <p role="alert" className="text-sm text-[var(--color-destructive)]">
-              {serverError}
-            </p>
-          )}
-          <div className="flex gap-3">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Сохраняем…" : "Создать"}
-            </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
-              Отмена
-            </Button>
-          </div>
-        </form>
-      </CardBody>
-    </Card>
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <Card className="glass-panel-strong mx-auto max-w-2xl">
+        <CardHeader>
+          <CardTitle className="text-lg">Новая инициатива</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="flex flex-col gap-4" onSubmit={(e) => void handleSubmit(onSubmit)(e)}>
+            <TextField
+              label="Название"
+              required
+              error={errors.title?.message}
+              {...register("title")}
+            />
+            <TextAreaField
+              label="Описание"
+              required
+              error={errors.description?.message}
+              {...register("description")}
+            />
+            <TextField
+              label="Сфера"
+              placeholder="Например: Здравоохранение"
+              required
+              error={errors.sphere?.message}
+              {...register("sphere")}
+            />
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="region_id">
+                Регион <span className="text-destructive">*</span>
+              </Label>
+              <Controller
+                name="region_id"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="region_id" className="w-full">
+                      <SelectValue placeholder="Выберите регион" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(regions ?? []).map((r) => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.region_id && (
+                <p role="alert" className="text-xs text-destructive">
+                  {errors.region_id.message}
+                </p>
+              )}
+            </div>
+
+            {serverError && (
+              <p role="alert" className="text-sm text-destructive">
+                {serverError}
+              </p>
+            )}
+            <div className="flex gap-3">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Сохраняем…" : "Создать"}
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
+                Отмена
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

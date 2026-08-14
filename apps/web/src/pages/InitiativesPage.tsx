@@ -7,10 +7,27 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/Button";
-import { StatusBadge } from "@/components/ui/Badge";
-import { SelectField } from "@/components/ui/Select";
-import { Card } from "@/components/ui/Card";
+import { AnimatePresence, motion } from "motion/react";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/StatusBadge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { InitiativeDetail } from "@/components/InitiativeDetail";
 import { ScoreMethodologyModal } from "@/components/ScoreMethodologyModal";
 import { apiFetch } from "@/lib/api";
@@ -18,6 +35,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { Initiative, InitiativeScoreOut, Region } from "@/types/api";
 
 const columnHelper = createColumnHelper<Initiative>();
+const ALL = "__all__";
 
 export function InitiativesPage() {
   const { user } = useAuth();
@@ -45,7 +63,8 @@ export function InitiativesPage() {
   });
 
   const scoreMutation = useMutation({
-    mutationFn: (id: string) => apiFetch<InitiativeScoreOut>(`/initiatives/${id}/score`, { method: "POST" }),
+    mutationFn: (id: string) =>
+      apiFetch<InitiativeScoreOut>(`/initiatives/${id}/score`, { method: "POST" }),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["initiatives"] }),
   });
 
@@ -66,7 +85,7 @@ export function InitiativesPage() {
         cell: (info) => (
           <button
             type="button"
-            className="cursor-pointer text-left font-medium text-[var(--color-foreground)] hover:underline"
+            className="cursor-pointer text-left font-medium text-foreground hover:underline"
             onClick={() =>
               setExpandedId((id) => (id === info.row.original.id ? null : info.row.original.id))
             }
@@ -93,7 +112,7 @@ export function InitiativesPage() {
               onClick={() => setShowMethodology(true)}
               aria-label="Как считается AI-балл"
               title="Как считается AI-балл"
-              className="cursor-pointer rounded-full text-slate-400 hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+              className="cursor-pointer rounded-full text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.3" />
@@ -107,9 +126,7 @@ export function InitiativesPage() {
             </button>
           </span>
         ),
-        cell: (info) => (
-          <span className="font-mono-data">{info.getValue() ?? "—"}</span>
-        ),
+        cell: (info) => <span className="font-mono-data">{info.getValue() ?? "—"}</span>,
       }),
       columnHelper.display({
         id: "actions",
@@ -119,13 +136,15 @@ export function InitiativesPage() {
             <div className="flex gap-2">
               <Button
                 variant="secondary"
+                size="sm"
                 onClick={() => scoreMutation.mutate(info.row.original.id)}
                 disabled={scoreMutation.isPending}
               >
                 Оценить
               </Button>
               <Button
-                variant="danger"
+                variant="destructive"
+                size="sm"
                 onClick={() => {
                   if (window.confirm(`Удалить «${info.row.original.title}»?`)) {
                     deleteMutation.mutate(info.row.original.id);
@@ -152,83 +171,111 @@ export function InitiativesPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-wrap gap-4">
-          <SelectField
-            label="Сфера"
-            value={sphereFilter}
-            onChange={(e) => setSphereFilter(e.target.value)}
-            className="min-w-48"
-          >
-            <option value="">Все сферы</option>
-            {spheres.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </SelectField>
-          <SelectField
-            label="Регион"
-            value={regionFilter}
-            onChange={(e) => setRegionFilter(e.target.value)}
-            className="min-w-48"
-          >
-            <option value="">Все регионы</option>
-            {(regions ?? []).map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </SelectField>
+          <div className="flex flex-col gap-1.5">
+            <Label>Сфера</Label>
+            <Select
+              value={sphereFilter || ALL}
+              onValueChange={(v) => setSphereFilter(v === ALL ? "" : v)}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Все сферы</SelectItem>
+                {spheres.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Регион</Label>
+            <Select
+              value={regionFilter || ALL}
+              onValueChange={(v) => setRegionFilter(v === ALL ? "" : v)}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Все регионы</SelectItem>
+                {(regions ?? []).map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    {r.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <Link to="/initiatives/new">
           <Button>Новая инициатива</Button>
         </Link>
       </div>
 
-      <Card className="overflow-x-auto">
+      <Card className="glass-panel">
         {isLoading ? (
-          <p className="p-6 text-sm text-slate-500">Загрузка…</p>
+          <div className="flex flex-col gap-3 p-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-full bg-white/40" />
+            ))}
+          </div>
         ) : (initiatives ?? []).length === 0 ? (
-          <p className="p-6 text-sm text-slate-500">Инициатив пока нет — создайте первую.</p>
+          <p className="p-6 text-sm text-muted-foreground">
+            Инициатив пока нет — создайте первую.
+          </p>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-[var(--color-border)] bg-[var(--color-muted)]">
+          <Table>
+            <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
+                <TableRow key={headerGroup.id} className="hover:bg-transparent">
                   {headerGroup.headers.map((header) => (
-                    <th key={header.id} className="px-4 py-2.5 font-medium text-slate-600">
+                    <TableHead key={header.id}>
                       {flexRender(header.column.columnDef.header, header.getContext())}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
+                </TableRow>
               ))}
-            </thead>
-            <tbody>
+            </TableHeader>
+            <TableBody>
               {table.getRowModel().rows.map((row) => (
                 <Fragment key={row.id}>
-                  <tr className="border-b border-[var(--color-border)] last:border-0">
+                  <TableRow>
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-2.5">
+                      <TableCell key={cell.id} className="whitespace-normal">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
+                      </TableCell>
                     ))}
-                  </tr>
-                  {expandedId === row.original.id && (
-                    <tr className="border-b border-[var(--color-border)] bg-[var(--color-muted)]">
-                      <td colSpan={row.getVisibleCells().length} className="px-4 py-4">
-                        <InitiativeDetail initiative={row.original} canManage={canManage} />
-                      </td>
-                    </tr>
-                  )}
+                  </TableRow>
+                  <AnimatePresence>
+                    {expandedId === row.original.id && (
+                      <TableRow className="hover:bg-transparent">
+                        <TableCell colSpan={row.getVisibleCells().length} className="p-0">
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                            className="overflow-hidden bg-muted/60"
+                          >
+                            <div className="px-4 py-4">
+                              <InitiativeDetail initiative={row.original} canManage={canManage} />
+                            </div>
+                          </motion.div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </AnimatePresence>
                 </Fragment>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
       </Card>
 
-      {showMethodology && (
-        <ScoreMethodologyModal onClose={() => setShowMethodology(false)} />
-      )}
+      <ScoreMethodologyModal open={showMethodology} onOpenChange={setShowMethodology} />
     </div>
   );
 }

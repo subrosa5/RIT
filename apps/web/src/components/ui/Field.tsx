@@ -1,10 +1,8 @@
 import { type InputHTMLAttributes, type TextareaHTMLAttributes, forwardRef, useId } from "react";
-import { cn } from "@/lib/cn";
-
-const fieldClasses =
-  "w-full rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm " +
-  "placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 " +
-  "focus-visible:ring-[var(--color-ring)] disabled:opacity-50";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -21,25 +19,25 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
 
     return (
       <div className="flex flex-col gap-1.5">
-        <label htmlFor={fieldId} className="text-sm font-medium text-slate-800">
+        <Label htmlFor={fieldId}>
           {label}
-          {props.required && <span className="text-[var(--color-destructive)]"> *</span>}
-        </label>
-        <input
+          {props.required && <span className="text-destructive"> *</span>}
+        </Label>
+        <Input
           ref={ref}
           id={fieldId}
           aria-invalid={Boolean(error)}
           aria-describedby={errorId ?? hintId}
-          className={cn(fieldClasses, error && "border-[var(--color-destructive)]", className)}
+          className={cn(className)}
           {...props}
         />
         {hint && !error && (
-          <p id={hintId} className="text-xs text-slate-500">
+          <p id={hintId} className="text-xs text-muted-foreground">
             {hint}
           </p>
         )}
         {error && (
-          <p id={errorId} role="alert" className="text-xs text-[var(--color-destructive)]">
+          <p id={errorId} role="alert" className="text-xs text-destructive">
             {error}
           </p>
         )}
@@ -62,20 +60,20 @@ export const TextAreaField = forwardRef<HTMLTextAreaElement, TextAreaFieldProps>
 
     return (
       <div className="flex flex-col gap-1.5">
-        <label htmlFor={fieldId} className="text-sm font-medium text-slate-800">
+        <Label htmlFor={fieldId}>
           {label}
-          {props.required && <span className="text-[var(--color-destructive)]"> *</span>}
-        </label>
-        <textarea
+          {props.required && <span className="text-destructive"> *</span>}
+        </Label>
+        <Textarea
           ref={ref}
           id={fieldId}
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
-          className={cn(fieldClasses, "min-h-28 resize-y", error && "border-[var(--color-destructive)]", className)}
+          className={cn("min-h-28 resize-y", className)}
           {...props}
         />
         {error && (
-          <p id={errorId} role="alert" className="text-xs text-[var(--color-destructive)]">
+          <p id={errorId} role="alert" className="text-xs text-destructive">
             {error}
           </p>
         )}

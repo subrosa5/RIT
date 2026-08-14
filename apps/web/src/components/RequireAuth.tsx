@@ -6,7 +6,7 @@ export function RequireAuth() {
   const location = useLocation();
 
   if (isLoading) {
-    return <div className="p-8 text-sm text-slate-500">Загрузка…</div>;
+    return <div className="flex min-h-dvh items-center p-8 text-sm text-white/70">Загрузка…</div>;
   }
 
   if (!user) {

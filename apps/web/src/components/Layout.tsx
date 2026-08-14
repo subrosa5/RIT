@@ -1,7 +1,8 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "motion/react";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/cn";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/", label: "Дашборд" },
@@ -10,13 +11,14 @@ const navItems = [
 
 export function Layout() {
   const { user, logout } = useAuth();
+  const location = useLocation();
 
   return (
-    <div className="min-h-dvh bg-[var(--color-background)]">
-      <header className="border-b border-[var(--color-border)] bg-white">
+    <div className="min-h-dvh">
+      <header className="glass-nav sticky top-0 z-40">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
           <div className="flex items-center gap-8">
-            <span className="font-mono-data text-sm font-semibold text-[var(--color-foreground)]">
+            <span className="font-mono-data text-sm font-semibold tracking-wide text-white">
               RIT
             </span>
             <nav className="flex gap-1">
@@ -29,8 +31,8 @@ export function Layout() {
                     cn(
                       "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-[var(--color-muted)] text-[var(--color-foreground)]"
-                        : "text-slate-600 hover:bg-[var(--color-muted)]",
+                        ? "bg-white/15 text-white"
+                        : "text-white/70 hover:bg-white/10 hover:text-white",
                     )
                   }
                 >
@@ -41,10 +43,14 @@ export function Layout() {
           </div>
           {user && (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-slate-600">
+              <span className="text-sm text-white/80">
                 {user.full_name} · <span className="font-mono-data">{user.role}</span>
               </span>
-              <Button variant="ghost" onClick={() => void logout()}>
+              <Button
+                variant="ghost"
+                className="text-white/80 hover:bg-white/10 hover:text-white"
+                onClick={() => void logout()}
+              >
                 Выйти
               </Button>
             </div>
@@ -52,7 +58,17 @@ export function Layout() {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-6 py-8">
-        <Outlet />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );
