@@ -35,10 +35,10 @@ async def seed() -> None:
             region_map[name] = region
         await db.flush()
 
-        admin = await db.scalar(select(User).where(User.email == "admin@rit.local"))
+        admin = await db.scalar(select(User).where(User.email == "admin@rit.dev"))
         if not admin:
             admin = User(
-                email="admin@rit.local",
+                email="admin@rit.dev",
                 full_name="Куратор Демо",
                 password_hash=hash_password("ChangeMe123!"),
                 role=Role.admin,
@@ -69,7 +69,7 @@ async def seed() -> None:
                 )
 
         await db.commit()
-    print("seed: ok (admin@rit.local / ChangeMe123! — смени пароль перед реальным использованием)")
+    print("seed: ok (admin@rit.dev / ChangeMe123! — смени пароль перед реальным использованием)")
 
 
 if __name__ == "__main__":

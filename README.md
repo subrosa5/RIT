@@ -9,7 +9,7 @@
 
 **Демо:** [rit-web-sigma.vercel.app](https://rit-web-sigma.vercel.app) ·
 **API:** [rit-api.vercel.app/docs](https://rit-api.vercel.app/docs)
-(тестовый вход: `admin@rit.local` / `ChangeMe123!`)
+(тестовый вход: `admin@rit.dev` / `ChangeMe123!`)
 
 ## Проблема
 
@@ -76,7 +76,7 @@ python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 cp .env.example .env
 alembic upgrade head
-python -m scripts.seed        # тестовый админ: admin@rit.local / ChangeMe123!
+python -m scripts.seed        # тестовый админ: admin@rit.dev / ChangeMe123!
 uvicorn app.main:app --reload
 
 # Frontend (в другом терминале)
