@@ -15,6 +15,12 @@ export interface Region {
   federal_district: string | null;
 }
 
+export interface ScoreFactor {
+  label: string;
+  detail: string;
+  points: number;
+}
+
 export interface Initiative {
   id: string;
   title: string;
@@ -25,6 +31,7 @@ export interface Initiative {
   author: User;
   kpi_score: number | null;
   ai_summary: string | null;
+  score_factors: ScoreFactor[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -32,14 +39,26 @@ export interface Initiative {
 export interface InitiativeScoreOut {
   kpi_score: number;
   ai_summary: string;
+  factors: ScoreFactor[];
   possible_duplicate_of: string | null;
+}
+
+export interface AuditEntry {
+  id: string;
+  action: string;
+  actor_name: string;
+  detail: string | null;
+  created_at: string;
 }
 
 export interface AnalyticsSummary {
   total_initiatives: number;
+  scored_count: number;
+  avg_kpi_score: number | null;
   by_status: Record<string, number>;
   by_sphere: { sphere: string; count: number }[];
   by_region: { region: string; count: number }[];
+  score_distribution: { bucket: string; count: number }[];
 }
 
 export interface ApiErrorBody {

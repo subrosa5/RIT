@@ -32,7 +32,7 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Всего инициатив" value={data.total_initiatives} />
         <StatTile
           label="Рекомендовано"
@@ -43,6 +43,11 @@ export function DashboardPage() {
           label="На рассмотрении"
           value={data.by_status["in_review"] ?? 0}
           accent="text-amber-700"
+        />
+        <StatTile
+          label="Средний AI-балл"
+          value={data.avg_kpi_score ?? "—"}
+          hint={`оценено ${data.scored_count} из ${data.total_initiatives}`}
         />
       </div>
 
@@ -95,24 +100,49 @@ export function DashboardPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <h2 className="text-sm font-semibold text-[var(--color-foreground)]">По статусам</h2>
-        </CardHeader>
-        <CardBody className="flex flex-wrap gap-3">
-          {Object.entries(data.by_status).map(([status, count]) => (
-            <div
-              key={status}
-              className="rounded-md border border-[var(--color-border)] px-3 py-2 text-sm"
-            >
-              <span className="text-slate-600">{statusLabels[status] ?? status}</span>{" "}
-              <span className="font-mono-data font-semibold text-[var(--color-foreground)]">
-                {count}
-              </span>
-            </div>
-          ))}
-        </CardBody>
-      </Card>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <h2 className="text-sm font-semibold text-[var(--color-foreground)]">По статусам</h2>
+          </CardHeader>
+          <CardBody className="flex flex-wrap gap-3">
+            {Object.entries(data.by_status).map(([status, count]) => (
+              <div
+                key={status}
+                className="rounded-md border border-[var(--color-border)] px-3 py-2 text-sm"
+              >
+                <span className="text-slate-600">{statusLabels[status] ?? status}</span>{" "}
+                <span className="font-mono-data font-semibold text-[var(--color-foreground)]">
+                  {count}
+                </span>
+              </div>
+            ))}
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <h2 className="text-sm font-semibold text-[var(--color-foreground)]">
+              Распределение AI-баллов
+            </h2>
+          </CardHeader>
+          <CardBody>
+            {data.scored_count === 0 ? (
+              <EmptyChart />
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={data.score_distribution} margin={{ top: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="bucket" tick={{ fontSize: 12 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} width={28} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="var(--color-secondary)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardBody>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -121,10 +151,12 @@ function StatTile({
   label,
   value,
   accent,
+  hint,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   accent?: string;
+  hint?: string;
 }) {
   return (
     <Card>
@@ -133,6 +165,7 @@ function StatTile({
         <p className={`font-mono-data mt-1 text-3xl font-semibold ${accent ?? "text-[var(--color-foreground)]"}`}>
           {value}
         </p>
+        {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
       </CardBody>
     </Card>
   );

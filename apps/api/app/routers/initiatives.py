@@ -1,17 +1,21 @@
 
+from dataclasses import asdict
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user, require_role
 from app.db.session import get_db
-from app.models.models import Initiative, InitiativeStatus, Role, User
+from app.models.models import AuditLog, Initiative, InitiativeStatus, Role, User
 from app.repositories import audit
 from app.schemas.schemas import (
+    AuditLogOut,
     InitiativeCreate,
     InitiativeOut,
     InitiativeScoreOut,
     InitiativeUpdate,
+    ScoreFactorOut,
 )
 from app.services.scoring import find_possible_duplicate, score_initiative
 
@@ -132,6 +136,7 @@ async def score(
     result = await score_initiative(initiative.title, initiative.description, initiative.sphere)
     initiative.kpi_score = result.kpi_score
     initiative.ai_summary = result.ai_summary
+    initiative.score_factors = [asdict(f) for f in result.factors]
 
     await audit.record(
         db,
@@ -139,10 +144,38 @@ async def score(
         action="score",
         entity_type="initiative",
         entity_id=initiative.id,
-        detail=f"provider={result.provider}",
+        detail=f"provider={result.provider}, kpi_score={result.kpi_score}",
     )
     await db.commit()
 
     return InitiativeScoreOut(
-        kpi_score=result.kpi_score, ai_summary=result.ai_summary, possible_duplicate_of=duplicate_id
+        kpi_score=result.kpi_score,
+        ai_summary=result.ai_summary,
+        factors=[ScoreFactorOut(**asdict(f)) for f in result.factors],
+        possible_duplicate_of=duplicate_id,
     )
+
+
+@router.get("/{initiative_id}/audit", response_model=list[AuditLogOut])
+async def get_audit_trail(
+    initiative_id: str, db: AsyncSession = Depends(get_db), _: User = Depends(get_current_user)
+) -> list[AuditLogOut]:
+    """Full history of who did what to this initiative — the append-only
+    audit_log table already recorded every mutation; this just makes it
+    visible instead of leaving it to sit unread in the database."""
+    rows = await db.execute(
+        select(AuditLog, User.full_name)
+        .join(User, User.id == AuditLog.actor_id)
+        .where(AuditLog.entity_type == "initiative", AuditLog.entity_id == initiative_id)
+        .order_by(AuditLog.created_at.desc())
+    )
+    return [
+        AuditLogOut(
+            id=entry.id,
+            action=entry.action,
+            actor_name=actor_name,
+            detail=entry.detail,
+            created_at=entry.created_at,
+        )
+        for entry, actor_name in rows.all()
+    ]

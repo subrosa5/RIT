@@ -1,0 +1,119 @@
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api";
+import type { AuditEntry, Initiative } from "@/types/api";
+
+const actionLabels: Record<string, string> = {
+  create: "Создана",
+  update: "Изменена",
+  score: "Оценена ИИ",
+  delete: "Удалена",
+};
+
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** The expanded panel under a row — full description, the AI score's factor
+ * breakdown (not just the number), and the audit trail. The point of all
+ * three together: nothing about how an initiative got its status should be
+ * invisible to the person reading it. */
+export function InitiativeDetail({
+  initiative,
+  canManage,
+}: {
+  initiative: Initiative;
+  canManage: boolean;
+}) {
+  const { data: audit, isLoading: auditLoading } = useQuery({
+    queryKey: ["initiative-audit", initiative.id],
+    queryFn: () => apiFetch<AuditEntry[]>(`/initiatives/${initiative.id}/audit`),
+  });
+
+  const maxPoints = Math.max(1, ...(initiative.score_factors ?? []).map((f) => Math.abs(f.points)));
+
+  return (
+    <div className="grid grid-cols-1 gap-6 text-sm lg:grid-cols-3">
+      <div className="lg:col-span-2">
+        <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+          Описание
+        </p>
+        <p className="mb-4 text-slate-700">{initiative.description}</p>
+
+        <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+          AI-заключение
+        </p>
+        {initiative.ai_summary ? (
+          <p className="mb-4 rounded-md border border-[var(--color-border)] bg-white p-3 text-slate-700">
+            {initiative.ai_summary}
+          </p>
+        ) : (
+          <p className="mb-4 text-slate-400">
+            Ещё не оценено — {canManage ? "нажмите «Оценить» выше" : "ожидает куратора"}.
+          </p>
+        )}
+
+        {initiative.score_factors && initiative.score_factors.length > 0 && (
+          <>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+              На чём основан балл
+            </p>
+            <div className="flex flex-col gap-1.5 rounded-md border border-[var(--color-border)] bg-white p-3">
+              {initiative.score_factors.map((factor, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-40 shrink-0 text-slate-700">{factor.label}</div>
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--color-muted)]">
+                    <div
+                      className="h-full rounded-full bg-[var(--color-primary)]"
+                      style={{ width: `${Math.max(4, (Math.abs(factor.points) / maxPoints) * 100)}%` }}
+                    />
+                  </div>
+                  <div className="font-mono-data w-12 shrink-0 text-right text-slate-700">
+                    {factor.points > 0 ? "+" : ""}
+                    {factor.points}
+                  </div>
+                  <div className="w-48 shrink-0 truncate text-xs text-slate-500" title={factor.detail}>
+                    {factor.detail}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      <div>
+        <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+          История изменений
+        </p>
+        {auditLoading ? (
+          <p className="text-slate-400">Загрузка…</p>
+        ) : !audit || audit.length === 0 ? (
+          <p className="text-slate-400">Нет записей.</p>
+        ) : (
+          <ol className="flex flex-col gap-3 border-l border-[var(--color-border)] pl-4">
+            {audit.map((entry) => (
+              <li key={entry.id} className="relative">
+                <span className="absolute -left-[21px] top-1 h-2 w-2 rounded-full bg-[var(--color-primary)]" />
+                <p className="font-medium text-slate-800">
+                  {actionLabels[entry.action] ?? entry.action}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {entry.actor_name} · {formatDateTime(entry.created_at)}
+                </p>
+                {entry.detail && (
+                  <p className="font-mono-data mt-0.5 text-xs text-slate-400">{entry.detail}</p>
+                )}
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -5,9 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import get_current_user
 from app.db.session import get_db
 from app.models.models import Initiative, Region, User
-from app.schemas.schemas import AnalyticsSummary, RegionBreakdown, SphereBreakdown
+from app.schemas.schemas import AnalyticsSummary, RegionBreakdown, ScoreBucket, SphereBreakdown
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
+
+_SCORE_BUCKETS = [(0, 20), (21, 40), (41, 60), (61, 80), (81, 100)]
 
 
 @router.get("/summary", response_model=AnalyticsSummary)
@@ -36,6 +38,30 @@ async def summary(
     )
     by_region = [RegionBreakdown(region=r[0], count=r[1]) for r in region_rows.all()]
 
+    scored_rows = await db.scalars(
+        select(Initiative.kpi_score).where(Initiative.kpi_score.is_not(None))
+    )
+    # The WHERE clause already excludes NULLs, but the column's static type
+    # is still `int | None` — narrow it here so mypy (correctly) doesn't
+    # have to trust a SQL filter it can't see into.
+    scores = [s for s in scored_rows.all() if s is not None]
+    scored_count = len(scores)
+    avg_kpi_score = round(sum(scores) / scored_count, 1) if scored_count else None
+
+    score_distribution = [
+        ScoreBucket(
+            bucket=f"{low}-{high}",
+            count=sum(1 for s in scores if low <= s <= high),
+        )
+        for low, high in _SCORE_BUCKETS
+    ]
+
     return AnalyticsSummary(
-        total_initiatives=total, by_status=by_status, by_sphere=by_sphere, by_region=by_region
+        total_initiatives=total,
+        scored_count=scored_count,
+        avg_kpi_score=avg_kpi_score,
+        by_status=by_status,
+        by_sphere=by_sphere,
+        by_region=by_region,
+        score_distribution=score_distribution,
     )

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
 import { SelectField } from "@/components/ui/Select";
 import { Card } from "@/components/ui/Card";
+import { InitiativeDetail } from "@/components/InitiativeDetail";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import type { Initiative, InitiativeScoreOut, Region } from "@/types/api";
@@ -191,29 +192,7 @@ export function InitiativesPage() {
                   {expandedId === row.original.id && (
                     <tr className="border-b border-[var(--color-border)] bg-[var(--color-muted)]">
                       <td colSpan={row.getVisibleCells().length} className="px-4 py-4">
-                        <div className="flex flex-col gap-3 text-sm">
-                          <div>
-                            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">
-                              Описание
-                            </p>
-                            <p className="text-slate-700">{row.original.description}</p>
-                          </div>
-                          <div>
-                            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">
-                              AI-заключение
-                            </p>
-                            {row.original.ai_summary ? (
-                              <p className="rounded-md border border-[var(--color-border)] bg-white p-3 text-slate-700">
-                                {row.original.ai_summary}
-                              </p>
-                            ) : (
-                              <p className="text-slate-400">
-                                Ещё не оценено —{" "}
-                                {canManage ? "нажмите «Оценить» выше" : "ожидает куратора"}.
-                              </p>
-                            )}
-                          </div>
-                        </div>
+                        <InitiativeDetail initiative={row.original} canManage={canManage} />
                       </td>
                     </tr>
                   )}

@@ -60,6 +60,15 @@ class RegionCreate(BaseModel):
     federal_district: str | None = Field(default=None, max_length=255)
 
 
+# ---------- Scoring ----------
+
+
+class ScoreFactorOut(BaseModel):
+    label: str
+    detail: str
+    points: float
+
+
 # ---------- Initiative ----------
 
 
@@ -89,6 +98,7 @@ class InitiativeOut(BaseModel):
     author: UserOut
     kpi_score: int | None = None
     ai_summary: str | None = None
+    score_factors: list[ScoreFactorOut] | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -96,7 +106,19 @@ class InitiativeOut(BaseModel):
 class InitiativeScoreOut(BaseModel):
     kpi_score: int
     ai_summary: str
+    factors: list[ScoreFactorOut]
     possible_duplicate_of: str | None = None
+
+
+# ---------- Audit ----------
+
+
+class AuditLogOut(BaseModel):
+    id: str
+    action: str
+    actor_name: str
+    detail: str | None = None
+    created_at: datetime
 
 
 # ---------- Analytics ----------
@@ -112,8 +134,16 @@ class RegionBreakdown(BaseModel):
     count: int
 
 
+class ScoreBucket(BaseModel):
+    bucket: str
+    count: int
+
+
 class AnalyticsSummary(BaseModel):
     total_initiatives: int
+    scored_count: int
+    avg_kpi_score: float | None
     by_status: dict[str, int]
     by_sphere: list[SphereBreakdown]
     by_region: list[RegionBreakdown]
+    score_distribution: list[ScoreBucket]

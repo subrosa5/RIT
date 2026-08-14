@@ -64,6 +64,18 @@ async def test_curator_workflow_create_score_delete(client, admin_client):
     body = score.json()
     assert 0 <= body["kpi_score"] <= 100
     assert body["ai_summary"]  # heuristic fallback still produces a real summary
+    assert body["factors"], "score must come with a breakdown, not just a number"
+    assert all({"label", "detail", "points"} <= f.keys() for f in body["factors"])
+
+    # the score is persisted, not just returned once
+    fetched = await admin_client.get(f"/api/initiatives/{initiative_id}")
+    assert fetched.json()["score_factors"] == body["factors"]
+
+    # audit trail records both the creation and the scoring, newest first
+    audit_resp = await admin_client.get(f"/api/initiatives/{initiative_id}/audit")
+    assert audit_resp.status_code == 200
+    actions = [entry["action"] for entry in audit_resp.json()]
+    assert actions == ["score", "create"]
 
     # only curator/admin can delete
     delete_forbidden = await client.delete(f"/api/initiatives/{initiative_id}")
@@ -88,3 +100,33 @@ async def test_analytics_summary_shape(client, admin_client):
     body = resp.json()
     assert "total_initiatives" in body
     assert "by_status" in body
+    assert body["avg_kpi_score"] is None  # nothing scored yet in this test's fresh DB
+    assert body["scored_count"] == 0
+    assert len(body["score_distribution"]) == 5
+
+
+async def test_analytics_reflects_scored_initiative(client, admin_client):
+    region_id = await _make_region(admin_client)
+    await client.post(
+        "/api/auth/register",
+        json={"email": "scored@example.com", "full_name": "Scored", "password": "correcthorse1"},
+    )
+    create = await client.post(
+        "/api/initiatives",
+        json={
+            "title": "Аналитика для парков",
+            "description": "Подробное описание практики про городские парки и датчики.",
+            "sphere": "Городская среда",
+            "region_id": region_id,
+        },
+    )
+    initiative_id = create.json()["id"]
+    score = await admin_client.post(f"/api/initiatives/{initiative_id}/score")
+    kpi_score = score.json()["kpi_score"]
+
+    summary = await client.get("/api/analytics/summary")
+    body = summary.json()
+    assert body["scored_count"] == 1
+    assert body["avg_kpi_score"] == kpi_score
+    bucketed = sum(b["count"] for b in body["score_distribution"])
+    assert bucketed == 1
