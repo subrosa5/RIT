@@ -6,8 +6,9 @@ that silently boots with a placeholder secret is a security bug waiting
 to happen.
 """
 from functools import lru_cache
+from urllib.parse import urlsplit, urlunsplit
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Sentinel value, not a real secret — the app refuses to boot with this in
@@ -42,6 +43,34 @@ class Settings(BaseSettings):
     # --- Telegram digest (optional) ---
     TELEGRAM_BOT_TOKEN: str | None = None
     TELEGRAM_CHAT_ID: str | None = None
+
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def _normalize_database_url(cls, v: str) -> str:
+        """Managed Postgres providers (Neon, Heroku, Railway, ...) hand out
+        plain `postgres://`/`postgresql://` URLs with libpq-style query
+        params (`sslmode`, `channel_binding`) meant for psycopg — the
+        asyncpg driver SQLAlchemy needs here rejects those as unknown
+        connect() kwargs. Upgrade the scheme and strip them here, once, so
+        every other module can just trust DATABASE_URL is asyncpg-ready.
+        TLS is still enforced — see `connect_args` in db/session.py.
+        """
+        if v.startswith("sqlite"):
+            return v
+
+        parts = urlsplit(v)
+        scheme = parts.scheme
+        if scheme in ("postgres", "postgresql"):
+            scheme = "postgresql+asyncpg"
+
+        query_pairs = [
+            (k, val)
+            for k, val in (p.split("=", 1) for p in parts.query.split("&") if p)
+            if k not in ("sslmode", "channel_binding")
+        ]
+        query = "&".join(f"{k}={val}" for k, val in query_pairs)
+
+        return urlunsplit((scheme, parts.netloc, parts.path, query, parts.fragment))
 
     @property
     def is_production(self) -> bool:

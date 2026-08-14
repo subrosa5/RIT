@@ -7,7 +7,13 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-connect_args = {"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
+if "sqlite" in settings.DATABASE_URL:
+    connect_args: dict[str, object] = {"check_same_thread": False}
+else:
+    # Neon (and most managed Postgres) require TLS; `sslmode`/`channel_binding`
+    # were already stripped from the URL by Settings — asyncpg wants SSL
+    # negotiated via connect_args, not a query-string flag.
+    connect_args = {"ssl": "require"}
 
 engine = create_async_engine(settings.DATABASE_URL, echo=False, connect_args=connect_args)
 

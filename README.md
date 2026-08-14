@@ -7,6 +7,10 @@
 [![CI](https://github.com/subrosa5/RIT/actions/workflows/ci.yml/badge.svg)](https://github.com/subrosa5/RIT/actions/workflows/ci.yml)
 [![Security](https://github.com/subrosa5/RIT/actions/workflows/security.yml/badge.svg)](https://github.com/subrosa5/RIT/actions/workflows/security.yml)
 
+**Демо:** [rit-web-sigma.vercel.app](https://rit-web-sigma.vercel.app) ·
+**API:** [rit-api.vercel.app/docs](https://rit-api.vercel.app/docs)
+(тестовый вход: `admin@rit.local` / `ChangeMe123!`)
+
 ## Проблема
 
 Открытые платформы, куда любой может подать инициативу или практику,
