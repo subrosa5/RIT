@@ -11,7 +11,7 @@ interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
-  ({ label, error, hint, id, className, ...props }, ref) => {
+  ({ label, error, hint, id, className, required, ...props }, ref) => {
     const autoId = useId();
     const fieldId = id ?? autoId;
     const errorId = error ? `${fieldId}-error` : undefined;
@@ -21,11 +21,18 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={fieldId}>
           {label}
-          {props.required && <span className="text-destructive"> *</span>}
+          {required && <span className="text-destructive"> *</span>}
         </Label>
         <Input
           ref={ref}
           id={fieldId}
+          // Deliberately not forwarding the native `required` attribute:
+          // it triggers the browser's own constraint-validation UI (seen
+          // in the wild as a bare English "Required" bubble on mobile,
+          // fighting our Zod-driven Russian error text below). Validation
+          // is Zod's job end to end; `aria-required` keeps the a11y
+          // semantics without the native popup.
+          aria-required={required}
           aria-invalid={Boolean(error)}
           aria-describedby={errorId ?? hintId}
           className={cn(className)}
@@ -53,7 +60,7 @@ interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement>
 }
 
 export const TextAreaField = forwardRef<HTMLTextAreaElement, TextAreaFieldProps>(
-  ({ label, error, id, className, ...props }, ref) => {
+  ({ label, error, id, className, required, ...props }, ref) => {
     const autoId = useId();
     const fieldId = id ?? autoId;
     const errorId = error ? `${fieldId}-error` : undefined;
@@ -62,11 +69,13 @@ export const TextAreaField = forwardRef<HTMLTextAreaElement, TextAreaFieldProps>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={fieldId}>
           {label}
-          {props.required && <span className="text-destructive"> *</span>}
+          {required && <span className="text-destructive"> *</span>}
         </Label>
         <Textarea
           ref={ref}
           id={fieldId}
+          // See TextField above: no native `required`, Zod owns validation.
+          aria-required={required}
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
           className={cn("min-h-28 resize-y", className)}
