@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createColumnHelper,
@@ -22,6 +22,7 @@ export function InitiativesPage() {
   const queryClient = useQueryClient();
   const [sphereFilter, setSphereFilter] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const canManage = user?.role === "curator" || user?.role === "admin";
 
@@ -57,7 +58,20 @@ export function InitiativesPage() {
 
   const columns = useMemo(
     () => [
-      columnHelper.accessor("title", { header: "Название" }),
+      columnHelper.accessor("title", {
+        header: "Название",
+        cell: (info) => (
+          <button
+            type="button"
+            className="cursor-pointer text-left font-medium text-[var(--color-foreground)] hover:underline"
+            onClick={() =>
+              setExpandedId((id) => (id === info.row.original.id ? null : info.row.original.id))
+            }
+          >
+            {info.getValue()}
+          </button>
+        ),
+      }),
       columnHelper.accessor((row) => row.region.name, {
         id: "region",
         header: "Регион",
@@ -166,13 +180,44 @@ export function InitiativesPage() {
             </thead>
             <tbody>
               {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-b border-[var(--color-border)] last:border-0">
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-2.5">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
+                <Fragment key={row.id}>
+                  <tr className="border-b border-[var(--color-border)] last:border-0">
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-4 py-2.5">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                  {expandedId === row.original.id && (
+                    <tr className="border-b border-[var(--color-border)] bg-[var(--color-muted)]">
+                      <td colSpan={row.getVisibleCells().length} className="px-4 py-4">
+                        <div className="flex flex-col gap-3 text-sm">
+                          <div>
+                            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+                              Описание
+                            </p>
+                            <p className="text-slate-700">{row.original.description}</p>
+                          </div>
+                          <div>
+                            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">
+                              AI-заключение
+                            </p>
+                            {row.original.ai_summary ? (
+                              <p className="rounded-md border border-[var(--color-border)] bg-white p-3 text-slate-700">
+                                {row.original.ai_summary}
+                              </p>
+                            ) : (
+                              <p className="text-slate-400">
+                                Ещё не оценено —{" "}
+                                {canManage ? "нажмите «Оценить» выше" : "ожидает куратора"}.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
           </table>
