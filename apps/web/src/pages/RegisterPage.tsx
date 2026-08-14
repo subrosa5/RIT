@@ -7,6 +7,7 @@ import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/Field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { OpenInBrowserHint } from "@/components/OpenInBrowserHint";
 import { ApiError, apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -106,6 +107,7 @@ export function RegisterPage() {
                 Войти
               </Link>
             </p>
+            <OpenInBrowserHint />
           </CardContent>
         </Card>
       </motion.div>
