@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/ui/Badge";
 import { SelectField } from "@/components/ui/Select";
 import { Card } from "@/components/ui/Card";
 import { InitiativeDetail } from "@/components/InitiativeDetail";
+import { ScoreMethodologyModal } from "@/components/ScoreMethodologyModal";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import type { Initiative, InitiativeScoreOut, Region } from "@/types/api";
@@ -24,6 +25,7 @@ export function InitiativesPage() {
   const [sphereFilter, setSphereFilter] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showMethodology, setShowMethodology] = useState(false);
 
   const canManage = user?.role === "curator" || user?.role === "admin";
 
@@ -83,7 +85,28 @@ export function InitiativesPage() {
         cell: (info) => <StatusBadge status={info.getValue()} />,
       }),
       columnHelper.accessor("kpi_score", {
-        header: "KPI",
+        header: () => (
+          <span className="inline-flex items-center gap-1">
+            KPI
+            <button
+              type="button"
+              onClick={() => setShowMethodology(true)}
+              aria-label="Как считается AI-балл"
+              title="Как считается AI-балл"
+              className="cursor-pointer rounded-full text-slate-400 hover:text-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.3" />
+                <path
+                  d="M8 7.2v4M8 5.1v.01"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </span>
+        ),
         cell: (info) => (
           <span className="font-mono-data">{info.getValue() ?? "—"}</span>
         ),
@@ -202,6 +225,10 @@ export function InitiativesPage() {
           </table>
         )}
       </Card>
+
+      {showMethodology && (
+        <ScoreMethodologyModal onClose={() => setShowMethodology(false)} />
+      )}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bar,
@@ -9,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { ScoreMethodologyModal } from "@/components/ScoreMethodologyModal";
 import { apiFetch } from "@/lib/api";
 import type { AnalyticsSummary } from "@/types/api";
 
@@ -20,6 +22,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export function DashboardPage() {
+  const [showMethodology, setShowMethodology] = useState(false);
   const { data, isLoading, error } = useQuery({
     queryKey: ["analytics-summary"],
     queryFn: () => apiFetch<AnalyticsSummary>("/analytics/summary"),
@@ -47,9 +50,14 @@ export function DashboardPage() {
         <StatTile
           label="Средний AI-балл"
           value={data.avg_kpi_score ?? "—"}
-          hint={`оценено ${data.scored_count} из ${data.total_initiatives}`}
+          hint={`оценено ${data.scored_count} из ${data.total_initiatives} · как считается →`}
+          onClick={() => setShowMethodology(true)}
         />
       </div>
+
+      {showMethodology && (
+        <ScoreMethodologyModal onClose={() => setShowMethodology(false)} />
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
@@ -152,22 +160,36 @@ function StatTile({
   value,
   accent,
   hint,
+  onClick,
 }: {
   label: string;
   value: number | string;
   accent?: string;
   hint?: string;
+  onClick?: () => void;
 }) {
+  const body = (
+    <CardBody>
+      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
+      <p className={`font-mono-data mt-1 text-3xl font-semibold ${accent ?? "text-[var(--color-foreground)]"}`}>
+        {value}
+      </p>
+      {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+    </CardBody>
+  );
+
+  if (!onClick) {
+    return <Card>{body}</Card>;
+  }
+
   return (
-    <Card>
-      <CardBody>
-        <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-        <p className={`font-mono-data mt-1 text-3xl font-semibold ${accent ?? "text-[var(--color-foreground)]"}`}>
-          {value}
-        </p>
-        {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
-      </CardBody>
-    </Card>
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full cursor-pointer rounded-lg border border-[var(--color-border)] bg-white text-left shadow-sm transition-colors hover:border-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+    >
+      {body}
+    </button>
   );
 }
 

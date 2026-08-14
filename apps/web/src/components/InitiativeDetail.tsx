@@ -40,6 +40,17 @@ export function InitiativeDetail({
   return (
     <div className="grid grid-cols-1 gap-6 text-sm lg:grid-cols-3">
       <div className="lg:col-span-2">
+        {initiative.status === "rejected" && (
+          <div className="mb-4 rounded-md border border-[var(--color-destructive)]/30 bg-red-50 p-3">
+            <p className="font-medium text-red-800">Статус «Отклонена» — решение куратора</p>
+            <p className="mt-1 text-xs text-red-700">
+              ИИ не отклоняет инициативы сам — он только предлагает балл и заключение ниже.
+              Финальное решение принял человек; посмотрите AI-заключение и разбивку балла, чтобы
+              понять, чем куратор мог руководствоваться.
+            </p>
+          </div>
+        )}
+
         <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">
           Описание
         </p>
