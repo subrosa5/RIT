@@ -1,0 +1,28 @@
+# --- secrets ---
+.env
+.env.local
+*.pem
+
+# --- Python (apps/api) ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+apps/api/dev.db
+apps/api/alembic/versions/*.pyc
+
+# --- Node (apps/web) ---
+node_modules/
+apps/web/dist/
+apps/web/.vite/
+*.tsbuildinfo
+
+# --- editors / OS ---
+.DS_Store
+.vscode/
+.idea/
+*.swp
