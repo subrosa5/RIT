@@ -8,8 +8,13 @@
 [![Security](https://github.com/subrosa5/RIT/actions/workflows/security.yml/badge.svg)](https://github.com/subrosa5/RIT/actions/workflows/security.yml)
 
 **Демо:** [rit-web-sigma.vercel.app](https://rit-web-sigma.vercel.app) ·
-**API:** [rit-api.vercel.app/docs](https://rit-api.vercel.app/docs)
+**API health-check:** [rit-api.vercel.app/healthz](https://rit-api.vercel.app/healthz)
 (тестовый вход: `admin@rit.dev` / `ChangeMe123!`)
+
+> Интерактивная документация API (`/docs`) в проде намеренно отключена
+> (`docs_url=None` при `ENVIRONMENT=production`) — не выставлять схему API
+> публично считается хорошей практикой. Открыть её можно только локально,
+> запустив бэкенд с `ENVIRONMENT=development` (значение по умолчанию).
 
 ## Проблема
 
