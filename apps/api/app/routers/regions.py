@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_current_user, require_role
+from app.core.deps import require_role
 from app.db.session import get_db
 from app.models.models import Region, Role, User
 from app.schemas.schemas import RegionCreate, RegionOut
@@ -12,9 +12,7 @@ router = APIRouter(prefix="/regions", tags=["regions"])
 
 
 @router.get("", response_model=list[RegionOut])
-async def list_regions(
-    db: AsyncSession = Depends(get_db), _: User = Depends(get_current_user)
-) -> list[Region]:
+async def list_regions(db: AsyncSession = Depends(get_db)) -> list[Region]:
     result = await db.scalars(select(Region).order_by(Region.name))
     return list(result)
 

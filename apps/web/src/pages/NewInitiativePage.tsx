@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { motion } from "motion/react";
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApiError, apiFetch } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 import type { Initiative, Region } from "@/types/api";
 
 // Mirrors app/schemas/schemas.py::InitiativeCreate.
@@ -31,6 +32,7 @@ type FormValues = z.infer<typeof schema>;
 
 export function NewInitiativePage() {
   const navigate = useNavigate();
+  const { user, isLoading: authLoading } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
 
   const { data: regions } = useQuery({
@@ -54,6 +56,25 @@ export function NewInitiativePage() {
       setServerError(err instanceof ApiError ? err.message : "Не удалось создать инициативу.");
     }
   };
+
+  if (!authLoading && !user) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+        <Card className="glass-panel-strong mx-auto max-w-md text-center">
+          <CardContent className="flex flex-col items-center gap-3 pt-6">
+            <p className="text-sm text-muted-foreground">
+              Подать инициативу может только вошедший пользователь.
+            </p>
+            <Button asChild>
+              <Link to="/login" state={{ from: { pathname: "/initiatives/new" } }}>
+                Войти
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

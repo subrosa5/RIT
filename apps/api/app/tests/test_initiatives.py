@@ -85,9 +85,44 @@ async def test_curator_workflow_create_score_delete(client, admin_client):
     assert delete_ok.status_code == 204
 
 
-async def test_list_initiatives_requires_auth(client):
+async def test_list_initiatives_is_public(client):
+    # Reads are public by design — a demo link shouldn't need an account.
     resp = await client.get("/api/initiatives")
-    assert resp.status_code == 401
+    assert resp.status_code == 200
+
+
+async def test_get_and_audit_initiative_are_public(client, admin_client):
+    region_id = await _make_region(admin_client)
+    create = await admin_client.post(
+        "/api/initiatives",
+        json={
+            "title": "Публично видимая инициатива",
+            "description": "Описание достаточной длины для прохождения валидации формы.",
+            "sphere": "Городская среда",
+            "region_id": region_id,
+        },
+    )
+    initiative_id = create.json()["id"]
+
+    get_resp = await client.get(f"/api/initiatives/{initiative_id}")
+    assert get_resp.status_code == 200
+
+    audit_resp = await client.get(f"/api/initiatives/{initiative_id}/audit")
+    assert audit_resp.status_code == 200
+
+
+async def test_mutations_still_require_auth(client):
+    # Public reads must not accidentally widen into public writes.
+    create = await client.post(
+        "/api/initiatives",
+        json={
+            "title": "Анонимная попытка",
+            "description": "Описание достаточной длины для прохождения валидации формы.",
+            "sphere": "Городская среда",
+            "region_id": "does-not-matter",
+        },
+    )
+    assert create.status_code == 401
 
 
 async def test_analytics_summary_shape(client, admin_client):

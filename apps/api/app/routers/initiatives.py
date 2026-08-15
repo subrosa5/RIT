@@ -21,11 +21,16 @@ from app.services.scoring import find_possible_duplicate, score_initiative
 
 router = APIRouter(prefix="/initiatives", tags=["initiatives"])
 
+# Reads are public — a demo/portfolio deployment should be viewable from a
+# bare link, not gated behind an account. Every mutation below (create,
+# update, delete, score) still requires authentication and, where it
+# matters, a specific role — "public read, authenticated write" is a
+# deliberate boundary, not an oversight.
+
 
 @router.get("", response_model=list[InitiativeOut])
 async def list_initiatives(
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
     region_id: str | None = None,
     sphere: str | None = None,
     status_filter: InitiativeStatus | None = Query(default=None, alias="status"),
@@ -43,9 +48,7 @@ async def list_initiatives(
 
 
 @router.get("/{initiative_id}", response_model=InitiativeOut)
-async def get_initiative(
-    initiative_id: str, db: AsyncSession = Depends(get_db), _: User = Depends(get_current_user)
-) -> Initiative:
+async def get_initiative(initiative_id: str, db: AsyncSession = Depends(get_db)) -> Initiative:
     initiative = await db.get(Initiative, initiative_id)
     if initiative is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "initiative not found")
@@ -158,7 +161,7 @@ async def score(
 
 @router.get("/{initiative_id}/audit", response_model=list[AuditLogOut])
 async def get_audit_trail(
-    initiative_id: str, db: AsyncSession = Depends(get_db), _: User = Depends(get_current_user)
+    initiative_id: str, db: AsyncSession = Depends(get_db)
 ) -> list[AuditLogOut]:
     """Full history of who did what to this initiative — the append-only
     audit_log table already recorded every mutation; this just makes it

@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ const navItems = [
 ];
 
 export function Layout() {
-  const { user, logout } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const location = useLocation();
 
   return (
@@ -41,20 +41,29 @@ export function Layout() {
               ))}
             </nav>
           </div>
-          {user && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-white/80">
-                {user.full_name} · <span className="font-mono-data">{user.role}</span>
-              </span>
+          {!isLoading &&
+            (user ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-white/80">
+                  {user.full_name} · <span className="font-mono-data">{user.role}</span>
+                </span>
+                <Button
+                  variant="ghost"
+                  className="text-white/80 hover:bg-white/10 hover:text-white"
+                  onClick={() => void logout()}
+                >
+                  Выйти
+                </Button>
+              </div>
+            ) : (
               <Button
+                asChild
                 variant="ghost"
                 className="text-white/80 hover:bg-white/10 hover:text-white"
-                onClick={() => void logout()}
               >
-                Выйти
+                <Link to="/login">Войти</Link>
               </Button>
-            </div>
-          )}
+            ))}
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-6 py-8">

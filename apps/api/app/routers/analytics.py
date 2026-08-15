@@ -2,9 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import get_current_user
 from app.db.session import get_db
-from app.models.models import Initiative, Region, User
+from app.models.models import Initiative, Region
 from app.schemas.schemas import AnalyticsSummary, RegionBreakdown, ScoreBucket, SphereBreakdown
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -13,9 +12,7 @@ _SCORE_BUCKETS = [(0, 20), (21, 40), (41, 60), (61, 80), (81, 100)]
 
 
 @router.get("/summary", response_model=AnalyticsSummary)
-async def summary(
-    db: AsyncSession = Depends(get_db), _: User = Depends(get_current_user)
-) -> AnalyticsSummary:
+async def summary(db: AsyncSession = Depends(get_db)) -> AnalyticsSummary:
     total = await db.scalar(select(func.count(Initiative.id))) or 0
 
     status_rows = await db.execute(

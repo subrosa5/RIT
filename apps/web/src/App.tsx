@@ -1,7 +1,6 @@
 import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/Layout";
-import { RequireAuth } from "@/components/RequireAuth";
 import { LoginPage } from "@/pages/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage";
 import { NewInitiativePage } from "@/pages/NewInitiativePage";
@@ -26,26 +25,28 @@ export function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
-      <Route element={<RequireAuth />}>
-        <Route element={<Layout />}>
-          <Route
-            path="/"
-            element={
-              <Suspense fallback={<RouteFallback />}>
-                <DashboardPage />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/initiatives"
-            element={
-              <Suspense fallback={<RouteFallback />}>
-                <InitiativesPage />
-              </Suspense>
-            }
-          />
-          <Route path="/initiatives/new" element={<NewInitiativePage />} />
-        </Route>
+      {/* No auth gate here on purpose — a demo/portfolio link has to open
+          directly. Viewing is public end to end (see routers/*.py); only
+          the mutating actions (create/score/delete) require login, and
+          the backend enforces that regardless of what the UI shows. */}
+      <Route element={<Layout />}>
+        <Route
+          path="/"
+          element={
+            <Suspense fallback={<RouteFallback />}>
+              <DashboardPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/initiatives"
+          element={
+            <Suspense fallback={<RouteFallback />}>
+              <InitiativesPage />
+            </Suspense>
+          }
+        />
+        <Route path="/initiatives/new" element={<NewInitiativePage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
